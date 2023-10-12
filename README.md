@@ -38,6 +38,8 @@ python pretraining_stage1.py --seed 511 --device 0 --supervised 0 --epochs 30 --
 python pretraining_stage2.py --seed 511 --device 0 --supervised 1 --data_type rnn --epochs 20 --batch_size 256 --lr 0.0001 --lr_type step --milestones 20 --save 0 --predictor_bn 0 --mlp_only 0 --loss_type mse --data_path ../data/pretraining_data/pretraining_yield
 ```
 
+The pre-trained models for stage 1 and stage 2 are stored in `checkpoint`.
+
 ### Fine-tuning
 
 Run `downstream/prepare_data.py` to generate the input of the Buchwald-Hartwig dataset and the Suzuki-Miyaura dataset.
