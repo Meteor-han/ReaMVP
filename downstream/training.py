@@ -1,6 +1,9 @@
 from utils_ds import *
 from models.reaction import *
-from torch.utils.tensorboard import SummaryWriter
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except:
+    print("tensorboard, fail")
 import pickle
 from copy import deepcopy
 import matplotlib as mpl
@@ -76,21 +79,19 @@ class Finetuner:
         training_data = MyDataset(training_data)
         test_data = MyDataset(test_data)
         training_loader = DataLoader(training_data, batch_size=self.args.batch_size,
-                                     shuffle=True, collate_fn=my_collate_fn_3d, drop_last=False, num_workers=16)
+                                     shuffle=True, collate_fn=my_collate_fn_3d, drop_last=False, num_workers=self.args.data_workers)
         test_loader = DataLoader(test_data, batch_size=self.args.batch_size,
-                                 shuffle=False, collate_fn=my_collate_fn_3d, drop_last=False, num_workers=16)
+                                 shuffle=False, collate_fn=my_collate_fn_3d, drop_last=False, num_workers=self.args.data_workers)
 
         # load model
         ft_model = FinetuneModel(args=self.args)
         if self.args.supervised == 0:
             pretraining_state_dict = torch.load(
-                os.path.join("pretraining", "rnn_geo", "model", "stage1_256_0.001_cos_{}_{}_best.pt"
-                             .format(self.args.cl_weight, self.args.kl_weight)),
-                map_location=self.args.device)
+                os.path.join("checkpoint", "stage1_256_0.001_cos_{}_{}_best.pt"
+                             .format(self.args.cl_weight, self.args.kl_weight)), map_location=self.args.device)
         elif self.args.supervised == 1:
             pretraining_state_dict = torch.load(
-                os.path.join("pretraining", "{}".format(self.args.data_type), "model",
-                             "stage2_256_0.001_cos_mse_{}_{}_1_best.pt"
+                os.path.join("checkpoint", "stage2_256_0.001_cos_mse_{}_{}_1_best.pt"
                              .format(self.args.cl_weight, self.args.kl_weight)), map_location=self.args.device)
             # pretraining_state_dict["predictor_state_dict"] = temp_state_dict["predictor_state_dict"]
         else:
@@ -134,7 +135,7 @@ class Finetuner:
         (name, start, end) = name_split_dict[self.args.ds]
         self.args.name = name
         all_best_p = []
-        data_path = os.path.join(data_prefix, "data", "BH/BH_index_dgl_dict.pt")
+        data_path = os.path.join("data", "BH/BH_index_dgl_dict.pt")
         with open(data_path, "rb") as f:
             original_dataset, _, _ = pickle.load(f)
         dataset_dict = {}
@@ -143,7 +144,7 @@ class Finetuner:
         # 5 random initialization
         for seed in range(self.args.repeat):
             seed_torch(seed)
-            df_doyle = pd.read_excel(os.path.join(data_prefix, 'data', 'BH/Dreher_and_Doyle_input_data.xlsx'),
+            df_doyle = pd.read_excel(os.path.join('data', 'BH/Dreher_and_Doyle_input_data.xlsx'),
                                      sheet_name=name, engine='openpyxl')
             df_doyle['rxn'] = generate_buchwald_hartwig_rxns(df_doyle, 0.01)
             dataset = []
@@ -164,7 +165,7 @@ class Finetuner:
         (name, start, end) = name_split_dict[self.args.ds]
         self.args.name = name
         all_best_p = []
-        data_path = os.path.join(data_prefix, "data", "SM/SM_index_dgl_dict.pt")
+        data_path = os.path.join("data", "SM/SM_index_dgl_dict.pt")
         with open(data_path, "rb") as f:
             original_dataset, _, _ = pickle.load(f)
         dataset_dict = {}
@@ -173,7 +174,7 @@ class Finetuner:
         # 5 random initialization
         for seed in range(self.args.repeat):
             seed_torch(seed)
-            df = pd.read_csv(os.path.join(data_prefix, 'data', 'SM/SM_Test_{}.tsv'.format(name)),
+            df = pd.read_csv(os.path.join('data', 'SM/SM_Test_{}.tsv'.format(name)),
                              sep='\t')
             raw_dataset = generate_s_m_rxns(df, 0.01)
             dataset = []
@@ -191,11 +192,11 @@ class Finetuner:
         if self.args.ds == "BH":
             num_ = int(3955 * self.args.split[0])
             name_split = [('FullCV_{:02d}'.format(i), num_) for i in range(1, 11)]
-            data_path = os.path.join(data_prefix, "data", "{}/{}_index_dgl_dict.pt".format(self.args.ds, self.args.ds))
+            data_path = os.path.join("data", "{}/{}_index_dgl_dict.pt".format(self.args.ds, self.args.ds))
         else:
             num_ = int(5760 * self.args.split[0])
             name_split = [('random_split_{}'.format(i), num_) for i in range(10)]
-            data_path = os.path.join(data_prefix, "data",
+            data_path = os.path.join("data",
                                      "{}/{}_index_dgl_dict.pt".format(self.args.ds, self.args.ds))
         with open(data_path, "rb") as f:
             original_dataset, _, _ = pickle.load(f)
@@ -210,11 +211,11 @@ class Finetuner:
             if i >= self.args.repeat:
                 break
             if self.args.ds == "BH":
-                df_doyle = pd.read_excel(os.path.join(data_prefix, 'data', 'BH/Dreher_and_Doyle_input_data.xlsx'),
+                df_doyle = pd.read_excel(os.path.join('data', 'BH/Dreher_and_Doyle_input_data.xlsx'),
                                          sheet_name=name, engine='openpyxl')
                 raw_dataset = generate_buchwald_hartwig_rxns(df_doyle, 0.01)
             else:
-                df = pd.read_csv(os.path.join(data_prefix, 'data', 'SM/{}.tsv'.format(name)), sep='\t')
+                df = pd.read_csv(os.path.join('data', 'SM/{}.tsv'.format(name)), sep='\t')
                 raw_dataset = generate_s_m_rxns(df, 0.01)
             dataset = []
             for one in raw_dataset:

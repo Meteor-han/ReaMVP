@@ -6,8 +6,7 @@ import pickle
 from rdkit import RDLogger
 
 RDLogger.DisableLog('rdApp.warning')
-data_prefix = "/home/data/shirunhan/reaction"
-vocab_file = os.path.join(data_prefix, "data", "pretraining_data", "merge_vocab_frequency.pt")
+vocab_file = os.path.join("data", "pretraining_data", "merge_vocab_frequency.pt")
 with open(vocab_file, "rb") as f:
     frequency_vocab = pickle.load(f)
 
@@ -104,11 +103,11 @@ def compute_save_SM(dataset, save_dir, tag=False):
 
 
 if __name__ == '__main__':
-    df_BH = pd.read_csv(os.path.join(data_prefix, "data", "BH/BH.csv"), sep=',')
+    df_BH = pd.read_csv(os.path.join("data", "BH/BH.csv"), sep=',')
     dataset_BH = generate_buchwald_hartwig_rxns(df_BH, 0.01)
-    BH_ = compute_save_BH(dataset_BH, os.path.join(data_prefix, "data", "BH/BH_index_dgl_dict.pt"))
+    BH_ = compute_save_BH(dataset_BH, os.path.join("data", "BH/BH_index_dgl_dict.pt"))
 
-    df_SM = pd.read_csv(os.path.join(data_prefix, "data", "SM/SM.tsv"), sep='\t')
+    df_SM = pd.read_csv(os.path.join("data", "SM/SM_custom.tsv"), sep='\t')
     dataset_SM = generate_s_m_rxns(df_SM, 0.01)
-    SM = compute_save_SM(dataset_SM, os.path.join(data_prefix, "data", "SM/SM_index_dgl_dict.pt"))
+    SM = compute_save_SM(dataset_SM, os.path.join("data", "SM/SM_index_dgl_dict.pt"))
     print()

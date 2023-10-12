@@ -27,6 +27,7 @@ def get_args():
     parser.add_argument('--seed', type=int, default=217)
     parser.add_argument('--device', type=int, default=0, choices=[i for i in range(8)])
     parser.add_argument('--save', type=int, default=1)
+    parser.add_argument('--data_workers', type=int, default=4)
     parser.add_argument('--supervised', type=int, default=0,
                         choices=[0, 1, 2], help="0: self-supervised, 1: then supervised, 2: supervised only")
     parser.add_argument('--data_type', type=str, default="sequence_conformer",

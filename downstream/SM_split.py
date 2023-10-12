@@ -1,6 +1,5 @@
 from collections import defaultdict
 from utils_ds import *
-data_prefix = "/amax/data/shirunhan/reaction"
 
 
 def make_reaction_smiles(row, dict_):
@@ -15,21 +14,8 @@ def make_reaction_smiles(row, dict_):
     return f"{precursors}>{can_product}".replace(char_+char_+char_, char_).replace(char_+char_, char_).replace(' '+char_, '').replace(char_+' ', '').replace(' ', '')
 
 
-def make_reaction_smiles_ligand(row, dict_, tag, test_names):
-    # dict_ already trans
-    char_ = "?" if tag else "."
-    wo_split = ['6-chloroquinoline', '6-Bromoquinoline', '6-triflatequinoline', '6-Iodoquinoline']
-    reactant_1 = dict_[row['Reactant_1_Name']].replace(".", char_) if row['Reactant_1_Name'] in wo_split else dict_[row['Reactant_1_Name']]
-    precursors = f"{reactant_1}{char_}{dict_[row['Reactant_2_Name']]}>{dict_[row['Catalyst_1_Short_Hand']]}{char_}{dict_[row['Ligand_Short_Hand']]}{char_}{dict_[row['Reagent_1_Short_Hand']]}{char_}{dict_[row['Solvent_1_Short_Hand']]}"
-    product = 'C1=C(C2=C(C)C=CC3N(C4OCCCC4)N=CC2=3)C=CC2=NC=CC=C12'
-    can_product = trans(product)
-    # only ligand and reagent contain "None"
-    test_tag = True if row['Ligand_Short_Hand'] in test_names else False
-    return [f"{precursors}>{can_product}".replace(char_+char_+char_, char_).replace(char_+char_, char_).replace(' '+char_, '').replace(char_+' ', '').replace(' ', ''), row['Product_Yield_PCT_Area_UV']/100., test_tag]
-
-
 if __name__ == '__main__':
-    df = pd.read_excel(os.path.join(data_prefix, 'data', 'SM/aap9112_data_file_s1.xlsx')).fillna("None")
+    df = pd.read_excel(os.path.join('data', 'SM', 'aap9112_data_file_s1.xlsx')).fillna("None")
     # isomericSmiles or not; omit H2O or not; whole molecule or split by '.'
     name_to_smiles = {
         '6-chloroquinoline': 'C1=C(Cl)C=CC2=NC=CC=C12.CCC1=CC(=CC=C1)CC', 
@@ -90,6 +76,24 @@ if __name__ == '__main__':
     for i, row in df.iterrows():
         ligand_count[row['Ligand_Short_Hand']] += 1
 
+    """get random split, the same index as previous works, 
+    we only change the form xx>>xx to reactants>catalyst.ligand.reagent.solvent>product"""
+    df['rxn'] = [make_reaction_smiles(row, name_to_smiles) for i, row in df.iterrows()]
+    df['y'] = df['Product_Yield_PCT_Area_UV'] / 100.
+    reactions_df = df[['rxn', 'y']]
+    for seed in range(10):
+        new_df = pd.read_csv(os.path.join('data', 'SM/random_split_{}.tsv'.format(seed)), sep='\t')
+        new_df.rename(columns={"Unnamed: 0": "index"}, inplace=True)
+        for i in range(5760):
+            new_df.iloc[i, 1] = reactions_df.iloc[new_df.iloc[i, 0], 0]
+        new_df.to_csv(os.path.join('data', 'SM/random_split_{}_custom.tsv'.format(seed)), sep='\t')
+    # the same as split 0, just for training
+    new_df = pd.read_csv(os.path.join('data', 'SM/SM.tsv'), sep='\t')
+    new_df.rename(columns={"Unnamed: 0": "index"}, inplace=True)
+    for i in range(5760):
+        new_df.iloc[i, 1] = reactions_df.iloc[new_df.iloc[i, 0], 0]
+    new_df.to_csv(os.path.join('data', 'SM/SM_custom.tsv'), sep='\t')
+
     """get ligand-based split, row xlsx, then own data type"""
     test_ = []
     for names in [["AmPhos", "CataCXium A", "Xantphos"], ["P(Ph)3", "P(Cy)3", "P(o-Tol)3"],
@@ -102,16 +106,16 @@ if __name__ == '__main__':
                 training_index.append(i)
         test_.append(df.reindex(training_index+test_index))
     # create an excel writer object
-    with pd.ExcelWriter(os.path.join(data_prefix, 'data', 'SM/SM_Test.xlsx')) as writer:
+    with pd.ExcelWriter(os.path.join('data', 'SM', 'SM_Test.xlsx')) as writer:
         for i, new_df in enumerate(test_):
             new_df.to_excel(writer, sheet_name="Test_{}".format(i+1), index=False)
     print()
     for id_ in range(1, 5):
-        df = pd.read_excel(os.path.join(data_prefix, 'data', 'SM/SM_Test.xlsx'), sheet_name="Test_{}".format(id_)).fillna("None")
+        df = pd.read_excel(os.path.join('data', 'SM', 'SM_Test.xlsx'), sheet_name="Test_{}".format(id_)).fillna("None")
         df["index"] = df["Reaction_No"] - 1
         df['rxn'] = [make_reaction_smiles(row, name_to_smiles) for i, row in df.iterrows()]
         df['y'] = df['Product_Yield_PCT_Area_UV'] / 100.
         reactions_df = df[['index', 'rxn', 'y']]
-        reactions_df.to_csv(os.path.join(data_prefix, 'data', 'SM/SM_Test_{}.tsv'.format(id_)), sep='\t')
+        reactions_df.to_csv(os.path.join('data', 'SM', 'SM_Test_{}.tsv'.format(id_)), sep='\t')
         print()
     print()
