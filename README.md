@@ -9,6 +9,7 @@ We implement our model on `Python 3.10`. These packages are mainly used:
 ```
 rdkit                2022.9.5
 torch                2.0.0+cu118
+tensorboard          2.12.2
 dgl                  1.0.2+cu117
 numpy                1.24.2
 scikit-learn         1.2.2
