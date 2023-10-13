@@ -30,8 +30,8 @@ def get_args():
     parser.add_argument('--data_workers', type=int, default=4)
     parser.add_argument('--supervised', type=int, default=0,
                         choices=[0, 1, 2], help="0: self-supervised, 1: then supervised, 2: supervised only")
-    parser.add_argument('--data_type', type=str, default="sequence_conformer",
-                        choices=["rnn_gnn", "gnn_geo", "rnn", "geo", "rnn_geo"])
+    parser.add_argument('--data_type', type=str, default="rnn_geo",
+                        choices=["rnn", "geo", "rnn_geo"])
     parser.add_argument('--normalize', type=int, default=0, choices=[0, 1, 2])
     parser.add_argument('--opt', type=str, default="adam", choices=["adam", "sgd"])
     parser.add_argument('--momentum', type=float, default=0.9)

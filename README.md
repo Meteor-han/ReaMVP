@@ -40,10 +40,10 @@ Run `pretraining_stage1.py` and `pretraining_stage2.py` to pre-train ReaMVP in t
 ```
 python pretraining_stage1.py --seed 511 --device 0 --supervised 0 --epochs 30 --batch_size 256 --lr 0.001 --lr_type cos --T 1.0 --data_path ../data/pretraining_data/pretraining_cl
 
-python pretraining_stage2.py --seed 511 --device 0 --supervised 1 --data_type rnn --epochs 20 --batch_size 256 --lr 0.0001 --lr_type step --milestones 20 --save 0 --predictor_bn 0 --mlp_only 0 --loss_type mse --data_path ../data/pretraining_data/pretraining_yield
+python pretraining_stage2.py --seed 511 --device 0 --supervised 1 --data_type rnn_geo --epochs 20 --batch_size 256 --lr 0.0001 --lr_type step --milestones 20 --save 0 --predictor_bn 0 --mlp_only 0 --loss_type mse --data_path ../data/pretraining_data/pretraining_yield
 ```
 
-The pre-trained models for stage 1 and stage 2 are stored in `checkpoint`.
+The pre-trained models for stage 1 and stage 2 are stored in `checkpoint`. We provide the model with the sequence encoder alone (rnn), the conformer encoder alone (geo), and the concatenation of their outputs both (rnn_geo), respectively.
 
 ### Fine-tuning
 
