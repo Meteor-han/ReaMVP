@@ -25,7 +25,11 @@ We filtered reactions from USPTO and CJHIF. Related codes are stored in `data_ut
 
 We finetuned our model on two downstream datasets. Most of the data that has been split is publicly available. We use the same split as previous works if possible.  Related data for the Buchwald-Hartwig dataset and the Suzuki-Miyaura dataset is stored in `data/BH` and `data/SM`, respectively.
 
-For the Suzuki-Miyaura dataset, run `downstream/SM_split.py` to generate the raw out-of-sample data.
+For the Suzuki-Miyaura dataset, run `downstream/SM_split.py` to generate custom data. We define four groups of out-of-sample splits:
+
+<img src="downstream/ligands_split.png" alt="ligands_split" style="zoom: 50%;" />
+
+**Figure:** Ligands used in out-of-sample splits for the Suzuki-Miyaura dataset.
 
 ## Experiments
 
