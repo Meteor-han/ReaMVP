@@ -93,7 +93,10 @@ class Finetuner:
             pretraining_state_dict = torch.load(
                 os.path.join("checkpoint", f"{self.args.data_type}", "stage2_256_0.001_cos_mse_{}_{}_1_best.pt"
                              .format(self.args.cl_weight, self.args.kl_weight)), map_location=self.args.device)
-            # pretraining_state_dict["predictor_state_dict"] = temp_state_dict["predictor_state_dict"]
+        elif self.args.supervised == 2:
+            pretraining_state_dict = torch.load(
+                os.path.join("checkpoint", f"{self.args.data_type}", "stage2_256_0.001_cos_mse_{}_{}_2_best.pt"
+                             .format(self.args.cl_weight, self.args.kl_weight)), map_location=self.args.device)
         else:
             pretraining_state_dict = None
             print("Not yet")
