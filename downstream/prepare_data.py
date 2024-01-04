@@ -3,6 +3,8 @@ from utils import mol_to_dgl_graph
 from data_utils.merge_data import split_line
 from rdkit.Chem import AllChem
 import pickle
+import json
+from tqdm import tqdm
 from rdkit import RDLogger
 
 RDLogger.DisableLog('rdApp.warning')
@@ -40,7 +42,7 @@ def compute_save_BH(dataset, save_dir):
     # s
     smiles_dgl_dict = {}
     # does not contain single one
-    for i in range(len(dataset)):
+    for i in tqdm(range(len(dataset))):
         temp_reaction = []
         one_dgl_list = []
         for s in dataset[i][:-1]:
@@ -74,7 +76,7 @@ def compute_save_SM(dataset, save_dir, tag=False):
     smiles_index_dict = {}
     # s
     smiles_dgl_dict = {}
-    for i in range(len(dataset)):
+    for i in tqdm(range(len(dataset))):
         temp_reaction = []
         one_dgl_list = []
         char_ = "?" if tag else "."
@@ -102,6 +104,40 @@ def compute_save_SM(dataset, save_dir, tag=False):
     return SM_list, smiles_index_dict, smiles_dgl_dict
 
 
+def compute_save_az_BH(dataset, save_dir):
+    # already canonicalized
+    # az BH, ~, -1
+    BH_list = []
+    # l, c, r
+    smiles_index_dict = {}
+    # s
+    smiles_dgl_dict = {}
+    # does not contain single one
+    for i in tqdm(range(len(dataset))):
+        temp_reaction = []
+        one_dgl_list = []
+        l, c, r = dataset[i][0].split(">")
+        for s in dataset[i][0].replace(">", ".").split("."):
+            # omit single one?
+            # mol = Chem.MolFromSmiles(s)
+            # if mol.GetNumAtoms() < 1.5:
+            #     exit()
+            temp_reaction.append(s)
+            one_dgl_list.append(get_dgl_with_dict(s, smiles_dgl_dict))
+        for s in [l, c, r]:
+            temp_index_list = []
+            for one in split_line(s):
+                temp_index_list.append(frequency_vocab.get(one, frequency_vocab["UNK"]))
+            smiles_index_dict[s] = temp_index_list
+        one_index_list = [frequency_vocab["BOS"]] + smiles_index_dict[l] + [frequency_vocab["SEP"]] + \
+                         smiles_index_dict[c] + [frequency_vocab["SEP"]] + smiles_index_dict[r]
+        one_index_list = one_index_list[:511] + [frequency_vocab["EOS"]]
+        BH_list.append([dataset[i], one_index_list, one_dgl_list, dataset[i][-1]])
+    with open(save_dir, "wb") as f:
+        pickle.dump([BH_list, smiles_index_dict, smiles_dgl_dict], f)
+    return BH_list, smiles_index_dict, smiles_dgl_dict
+
+
 if __name__ == '__main__':
     df_BH = pd.read_csv(os.path.join("data", "BH/BH.csv"), sep=',')
     dataset_BH = generate_buchwald_hartwig_rxns(df_BH, 0.01)
@@ -110,4 +146,9 @@ if __name__ == '__main__':
     df_SM = pd.read_csv(os.path.join("data", "SM/SM_custom.tsv"), sep='\t')
     dataset_SM = generate_s_m_rxns(df_SM, 0.01)
     SM = compute_save_SM(dataset_SM, os.path.join("data", "SM/SM_index_dgl_dict.pt"))
+
+    with open(os.path.join("data/az", "raw", "az_reactions_data.json"), "r") as f:
+        raw_data_az_BH = json.load(f)
+    dataset_az_BH = generate_az_bh_rxns(raw_data_az_BH)
+    az_BH = compute_save_az_BH(dataset_az_BH, os.path.join("data", "az/az_index_dgl_dict.pt"))
     print()

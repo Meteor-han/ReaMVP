@@ -23,13 +23,19 @@ We filtered reactions from USPTO and CJHIF. Related codes are stored in `data_ut
 
 ### Downstream dataset
 
-We finetuned our model on two downstream datasets. Most of the data that has been split is publicly available. We use the same split as previous works if possible.  Related data for the Buchwald-Hartwig dataset and the Suzuki-Miyaura dataset is stored in `data/BH` and `data/SM`, respectively.
+We finetuned our model on three downstream datasets. Most of the data that has been split is publicly available. We use the same split as previous works if possible.  Related data for the Buchwald-Hartwig dataset, the Suzuki-Miyaura dataset, and the ELN BH dataset is stored in `data/BH`, `data/SM`, and `data/az`, respectively.
 
-For the Suzuki-Miyaura dataset, run `downstream/SM_split.py` to generate custom data. We define four groups of out-of-sample splits:
+For the Buchwald-Hartwig dataset, we define five groups of out-of-sample splits based on reactants:
 
-<img src="downstream/ligands_split.png" alt="ligands_split" style="zoom: 50%;" />
+<img src="downstream/reactant_split.png" alt="reactant_split"  style="zoom:50%;" />
 
-**Figure:** Ligands used in out-of-sample splits for the Suzuki-Miyaura dataset.
+**Figure:** Reactant-based out-of-sample splits for the Buchwald-Hartwig dataset.
+
+For the Suzuki-Miyaura dataset, run `downstream/SM_split.py` to generate custom data. We define four groups of out-of-sample splits based on ligands:
+
+<img src="downstream/ligands_split.png" alt="reactant_split" style="zoom:50%;" />
+
+**Figure:** Ligand-based out-of-sample splits for the Suzuki-Miyaura dataset.
 
 ## Experiments
 
@@ -47,7 +53,7 @@ The pre-trained models for stage 1 and stage 2 are stored in `checkpoint`. We pr
 
 ### Fine-tuning
 
-Run `downstream/prepare_data.py` to generate the input of the Buchwald-Hartwig dataset and the Suzuki-Miyaura dataset.
+Run `downstream/prepare_data.py` to generate the input of the Buchwald-Hartwig dataset, the Suzuki-Miyaura dataset, and the ELN BH dataset.
 
 Run `downstream/training.py` to fine-tune ReaMVP on a given downstream dataset. For example,
 
@@ -55,5 +61,6 @@ Run `downstream/training.py` to fine-tune ReaMVP on a given downstream dataset. 
 python downstream/training.py --ds SM_test1 --device 0 --data_type rnn_geo --batch_size 128 --supervised 1 --lr 1e-3 --lr_type step --weight_decay 0 --predictor_dropout 0.1 --predictor_num_layers 2 --gamma 0.3 --milestones 100 --epochs 50 --save 0 --normalize 0 --loss_type mse --cl_weight 1. --kl_weight 1. --predictor_bn 0 --repeat 5
 ```
 
+### Non-DL methods
 
-
+See `downstream/train_ml.py`.

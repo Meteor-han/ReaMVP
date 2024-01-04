@@ -48,7 +48,8 @@ def get_args():
     parser.add_argument("--ds", default="None", type=str,
                         choices=["BH", "SM", "SM_test1", "SM_test2", "SM_test3", "SM_test4",
                                  "BH_test1", "BH_test2", "BH_test3", "BH_test4",
-                                 "BH_plate1", "BH_plate2", "BH_plate3", "BH_plate2_new"])
+                                 "BH_plate1", "BH_plate2", "BH_plate3", "BH_plate2_new",
+                                 "az", "halide_I", "halide_Cl", "halide_Br", "pyridyl", "nonpyridyl"])
     parser.add_argument("--repeat", default=10, type=int)
     parser.add_argument("--split", type=float, nargs='+', default=[0.7])
 

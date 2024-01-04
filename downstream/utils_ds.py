@@ -69,28 +69,13 @@ def generate_s_m_rxns(df, mul=1.0):
     return rxns
 
 
-def generate_buchwald_hartwig_wo_additive(df, mul=0.01):
-    df = df.copy()
-    methylaniline = 'Cc1ccc(N)cc1'
-    pd_catalyst = Chem.MolToSmiles(Chem.MolFromSmiles('O=S(=O)(O[Pd]1~[NH2]C2C=CC=CC=2C2C=CC=CC1=2)C(F)(F)F'))
-
+def generate_az_bh_rxns(raw_data, mul=0.01):
     rxns = []
-    can_smiles_dict = {}
-    for i, row in df.iterrows():
-        try:
-            aryl_halide = canonicalize_with_dict(row['aryl_halide_smiles'], can_smiles_dict)
-            can_smiles_dict[row['aryl_halide_smiles']] = aryl_halide
-            ligand = canonicalize_with_dict(row['ligand_smiles'], can_smiles_dict)
-            can_smiles_dict[row['ligand_smiles']] = ligand
-            base = canonicalize_with_dict(row['base_smiles'], can_smiles_dict)
-            can_smiles_dict[row['base_smiles']] = base
-            product = canonicalize_with_dict(row['product_smiles'], can_smiles_dict)
-            can_smiles_dict[row['product_smiles']] = product
-
-            reactants = f"{aryl_halide}.{methylaniline}.{pd_catalyst}.{ligand}.{base}.{product}"
-            rxns.append(tuple(f"{reactants}".split(".")) + (row['yield'] * mul,))
-        except:
-            continue
+    for one in raw_data:
+        # all exists, no empty (""); raw data not canonicalized
+        rxns.append((f'{trans(one["reactants"][0]["smiles"])}.{trans(one["reactants"][1]["smiles"])}>' +
+                     f'{trans(one["reactants"][2]["smiles"])}.{trans(one["base"]["smiles"])}.{trans(one["solvent"][0])}>' +
+                     f'{trans(one["product"]["smiles"])}',) + (one["yield"]["yield"] * mul,))
     return rxns
 
 
@@ -99,11 +84,5 @@ if __name__ == '__main__':
     dataset_BH = generate_buchwald_hartwig_rxns(df_BH)
     df_SM = pd.read_csv("../../data/SM/SM.tsv", sep='\t')
     dataset_SM = generate_s_m_rxns(df_SM)
-    df_BH_wo = pd.read_csv("../../data/BH_wo/data_table.csv", sep=',')
-    dataset_BH_wo = generate_buchwald_hartwig_wo_additive(df_BH_wo)
-    print()
 
-    # import pickle
-    # with open("../../data/AAA/AAA_3d.pt", "rb") as f:
-    #     ds_dataset = pickle.load(f)
     print()

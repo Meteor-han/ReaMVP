@@ -227,6 +227,52 @@ class Finetuner:
             all_best_p.append(p)
         self.print_results(all_best_p)
 
+    def run_az(self):
+        data_path = os.path.join("data", "az/az_index_dgl_dict.pt")
+        with open(os.path.join("data/az", "processed-0", "train_test_idxs.pickle"), "rb") as f:
+            train_test_idxs = pickle.load(f)
+        with open(data_path, "rb") as f:
+            original_dataset, _, _ = pickle.load(f)
+
+        all_best_p = []
+        # 10 splits
+        for i in range(10):
+            # for parameter selection
+            if i >= self.args.repeat:
+                break
+            training_data = []
+            test_data = []
+            for j in train_test_idxs["train_idx"][i+1]:
+                training_data.append(original_dataset[j])
+            for j in train_test_idxs["test_idx"][i+1]:
+                test_data.append(original_dataset[j])
+
+            p = self.train(training_data, test_data)
+            all_best_p.append(p)
+        self.print_results(all_best_p)
+
+    def run_BH_reactant(self):
+        data_path = os.path.join("data", "BH/BH_index_dgl_dict.pt")
+        with open(os.path.join("data", "BH/reactant_split_idxs.pickle"), "rb") as f:
+            train_test_idxs = pickle.load(f)
+        with open(data_path, "rb") as f:
+            original_dataset, _, _ = pickle.load(f)
+
+        all_best_p = []
+        # 5 random initialization
+        for seed in range(min(self.args.repeat, 5)):
+            seed_torch(seed+1)
+            training_data = []
+            test_data = []
+            for j in train_test_idxs[self.args.ds]["train_idx"]:
+                training_data.append(original_dataset[j])
+            for j in train_test_idxs[self.args.ds]["test_idx"]:
+                test_data.append(original_dataset[j])
+
+            p = self.train(training_data, test_data)
+            all_best_p.append(p)
+        self.print_results(all_best_p)
+
 
 if __name__ == '__main__':
     runer = Finetuner()
@@ -234,6 +280,10 @@ if __name__ == '__main__':
     if True:
         if runer.args.ds in ["BH", "SM"]:
             runer.run_BH_or_SM()
+        elif runer.args.ds in ["az"]:
+            runer.run_az()
+        elif runer.args.ds in ["halide_I", "halide_Cl", "halide_Br", "pyridyl", "nonpyridyl"]:
+            runer.run_BH_reactant()
         elif runer.args.ds in ["SM_test1", "SM_test2", "SM_test3", "SM_test4"]:
             runer.run_SM_xx()
         else:
