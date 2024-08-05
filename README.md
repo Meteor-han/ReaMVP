@@ -1,6 +1,6 @@
 # ReaMVP
 
-Data and codes for the paper "Prediction of Chemical Reaction Yields with Large-Scale Multi-View Pre-training".
+Data and codes for the paper "[Prediction of Chemical Reaction Yields with Large-Scale Multi-View Pre-training](https://jcheminf.biomedcentral.com/articles/10.1186/s13321-024-00815-2)".
 
 ## Requirements
 
@@ -64,3 +64,20 @@ python downstream/training.py --ds SM_test1 --device 0 --data_type rnn_geo --bat
 ### Non-DL methods
 
 See `downstream/train_ml.py`.
+
+## Citation
+
+```
+@article{shi2024prediction,
+  title={Prediction of chemical reaction yields with large-scale multi-view pre-training},
+  author={Shi, Runhan and Yu, Gufeng and Huo, Xiaohong and Yang, Yang},
+  journal={Journal of Cheminformatics},
+  volume={16},
+  number={1},
+  pages={22},
+  year={2024},
+  publisher={Springer},
+  doi={10.1186/s13321-024-00815-2}
+}
+```
+
