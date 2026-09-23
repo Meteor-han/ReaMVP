@@ -2,6 +2,32 @@ from collections import defaultdict
 from utils_ds import *
 
 
+LIGAND_TEST_GROUPS = [
+    ["AmPhos", "CataCXium A", "Xantphos"],
+    ["P(Ph)3", "P(Cy)3", "P(o-Tol)3"],
+    ["P(tBu)3", "dtbpf", "dppf"],
+    ["None", "SPhos", "XPhos"],
+]
+
+
+def ligand_splits(df):
+    """Return training-first splits after normalizing spreadsheet labels."""
+    df = df.copy()
+    df['Ligand_Short_Hand'] = df['Ligand_Short_Hand'].fillna('None').str.strip()
+    expected_ligands = {name for group in LIGAND_TEST_GROUPS for name in group}
+    if set(df['Ligand_Short_Hand']) != expected_ligands:
+        raise ValueError('Unexpected or missing ligand labels in the SM dataset')
+    if len(df) != 5760 or not df['Reaction_No'].is_unique:
+        raise ValueError('Expected 5760 unique SM reactions')
+    splits = []
+    for names in LIGAND_TEST_GROUPS:
+        is_test = df['Ligand_Short_Hand'].isin(names)
+        if is_test.sum() != 1440:
+            raise ValueError(f'Expected 1440 test reactions for {names}')
+        splits.append(pd.concat([df.loc[~is_test], df.loc[is_test]]))
+    return splits
+
+
 def make_reaction_smiles(row, dict_):
     # dict_ already trans
     char_ = "."
@@ -16,6 +42,8 @@ def make_reaction_smiles(row, dict_):
 
 if __name__ == '__main__':
     df = pd.read_excel(os.path.join('data', 'SM', 'aap9112_data_file_s1.xlsx')).fillna("None")
+    # The source spreadsheet contains "P(Ph)3 " with a trailing space.
+    df['Ligand_Short_Hand'] = df['Ligand_Short_Hand'].str.strip()
     # isomericSmiles or not; omit H2O or not; whole molecule or split by '.'
     name_to_smiles = {
         '6-chloroquinoline': 'C1=C(Cl)C=CC2=NC=CC=C12.CCC1=CC(=CC=C1)CC', 
@@ -31,7 +59,7 @@ if __name__ == '__main__':
         '2d, Bromide': 'CC1=CC=C2C(C=NN2C3OCCCC3)=C1Br',
         'Pd(OAc)2': 'CC(=O)O~CC(=O)O~[Pd]',
         'P(tBu)3': 'CC(C)(C)P(C(C)(C)C)C(C)(C)C', 
-        'P(Ph)3 ': 'c3c(P(c1ccccc1)c2ccccc2)cccc3', 
+        'P(Ph)3': 'c3c(P(c1ccccc1)c2ccccc2)cccc3',
         'AmPhos': 'CC(C)(C)P(C1=CC=C(C=C1)N(C)C)C(C)(C)C', 
         'P(Cy)3': 'C1(CCCCC1)P(C2CCCCC2)C3CCCCC3', 
         'P(o-Tol)3': 'CC1=CC=CC=C1P(C2=CC=CC=C2C)C3=CC=CC=C3C',
@@ -58,7 +86,7 @@ if __name__ == '__main__':
     }
     ligand_smiles = {
         'P(tBu)3': 'CC(C)(C)P(C(C)(C)C)C(C)(C)C', 
-        'P(Ph)3 ': 'c3c(P(c1ccccc1)c2ccccc2)cccc3', 
+        'P(Ph)3': 'c3c(P(c1ccccc1)c2ccccc2)cccc3',
         'AmPhos': 'CC(C)(C)P(C1=CC=C(C=C1)N(C)C)C(C)(C)C', 
         'P(Cy)3': 'C1(CCCCC1)P(C2CCCCC2)C3CCCCC3', 
         'P(o-Tol)3': 'CC1=CC=CC=C1P(C2=CC=CC=C2C)C3=CC=CC=C3C',
@@ -95,16 +123,7 @@ if __name__ == '__main__':
     new_df.to_csv(os.path.join('data', 'SM/SM_custom.tsv'), sep='\t')
 
     """get ligand-based split, row xlsx, then own data type"""
-    test_ = []
-    for names in [["AmPhos", "CataCXium A", "Xantphos"], ["P(Ph)3", "P(Cy)3", "P(o-Tol)3"],
-                  ["P(tBu)3", "dtbpf", "dppf"], ["None", "SPhos", "XPhos"]]:
-        training_index, test_index = [], []
-        for i, row in df.iterrows():
-            if row['Ligand_Short_Hand'] in names:
-                test_index.append(i)
-            else:
-                training_index.append(i)
-        test_.append(df.reindex(training_index+test_index))
+    test_ = ligand_splits(df)
     # create an excel writer object
     with pd.ExcelWriter(os.path.join('data', 'SM', 'SM_Test.xlsx')) as writer:
         for i, new_df in enumerate(test_):
