@@ -2,12 +2,22 @@
 
 Data and codes for the paper "[Prediction of Chemical Reaction Yields with Large-Scale Multi-View Pre-training](https://jcheminf.biomedcentral.com/articles/10.1186/s13321-024-00815-2)".
 
-## Corrections (September 23, 2026)
+## Corrections (September 25, 2026)
 
 We thank a researcher for reporting the Suzuki–Miyaura split issue below. We have corrected the released split data and documented the Table 4 typo here.
 
-1. **Suzuki–Miyaura Test 2 split.** The source spreadsheet labels triphenylphosphine as `"P(Ph)3 "` (with a trailing space), while the original test-selection code used `"P(Ph)3"`. With the fixed 4,320/1,440 training/test boundary, this left only 48 of the intended 480 triphenylphosphine reactions in Test 2 and included 432 reactions with other ligands. We now normalize ligand labels in [`downstream/SM_split.py`](downstream/SM_split.py) and have updated [`SM_Test_2.tsv`](data/SM/SM_Test_2.tsv) and [`SM_Test.xlsx`](data/SM/SM_Test.xlsx). The corrected Test 2 contains 480 reactions each for P(Ph)3, P(Cy)3, and P(o-Tol)3. **Tests 1, 3, and 4 retain their original membership.** Reaction SMILES and yields are unchanged. The numerical impact requires re-evaluation; the original Table 4 Test 2 scores are not results on the corrected split.
-2. **Table 4 typo.** For UA-GNN on Test 1, the $R^2$ result should read $0.462 \pm 0.040$, rather than $0.462 \pm 0.400$.
+1. **Suzuki–Miyaura Test 2 split.** The source spreadsheet labels triphenylphosphine as `"P(Ph)3 "` (with a trailing space), while the original test-selection code used `"P(Ph)3"`. With the fixed 4,320/1,440 training/test boundary, this left only 48 of the intended 480 triphenylphosphine reactions in Test 2 and included 432 reactions with other ligands. We now normalize ligand labels in [`downstream/SM_split.py`](downstream/SM_split.py) and have updated [`SM_Test_2.tsv`](data/SM/SM_Test_2.tsv) and [`SM_Test.xlsx`](data/SM/SM_Test.xlsx). The corrected Test 2 contains 480 reactions each for P(Ph)3, P(Cy)3, and P(o-Tol)3. **Tests 1, 3, and 4 retain their original membership.** Reaction SMILES and yields are unchanged. We have rerun all four methods on the corrected split; the updated results below replace the original Table 4 Test 2 entries.
+2. **Table 4 typo.** For UA-GNN on Test 1, the R$^2$ result should read $0.462 \pm 0.040$, rather than $0.462 \pm 0.400$.
+
+### Updated results on the corrected Suzuki–Miyaura Test 2 split in Table 4
+
+| Measure | YieldBERT | YieldBERT-DA | UA-GNN | ReaMVP |
+| --- | --- | --- | --- | --- |
+| MAE | 18.352 $\pm$ 0.304 | 18.432 $\pm$ 0.425 | 18.230 $\pm$ 0.351 | **15.313 $\pm$ 0.535** |
+| RMSE | 23.155 $\pm$ 0.825 | 23.094 $\pm$ 0.412 | 24.832 $\pm$ 0.550 | **20.559 $\pm$ 0.627** |
+| R$^2$ | 0.380 $\pm$ 0.044 | 0.383 $\pm$ 0.022 | 0.275 $\pm$ 0.022 | **0.511 $\pm$ 0.029** |
+
+The corrected-split ReaMVP run used learning rate 1e-3, weight decay 1e-4, and predictor dropout 0.3 (`--lr 1e-3 --weight_decay 1e-4 --predictor_dropout 0.3`). ReaMVP achieves the lowest RMSE and MAE and the highest R$^2$ among these methods on the corrected split.
 
 ## Requirements
 
